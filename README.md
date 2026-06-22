@@ -10,10 +10,9 @@
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-111111?logo=nextdotjs&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-3E6B47.svg)
-<!-- After you push to GitHub, replace OWNER/REPO and uncomment: -->
-<!-- [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml) -->
+[![CI](https://github.com/farhanjavedjatt/folio/actions/workflows/ci.yml/badge.svg)](https://github.com/farhanjavedjatt/folio/actions/workflows/ci.yml)
 
-**[▶ Live demo](#)** &nbsp;·&nbsp; *(deploy to Vercel and drop the URL here — see [Deploy](#deploy))*
+### **[▶ Try the live demo](https://folio-psi-ashy-34.vercel.app)**
 
 <img src="docs/screenshots/hero-light.png" alt="Folio reading view" width="820" />
 
