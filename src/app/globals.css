@@ -1,26 +1,648 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
+/* Class-based dark mode (the .dark class is toggled on <html>). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Folio palette: light ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f2ede3;
+  --surface: #faf6ee;
+  --surface-alt: #ece5d7;
+  --surface-hover: #e6decc;
+  --border: #dbd1bd;
+  --border-strong: #c3b79e;
+  --ink: #211d17;
+  --muted: #5c5446;
+  --faint: #8c8472;
+  --primary: #2a4c7d;
+  --primary-fg: #faf6ee;
+  --accent: #b4612b;
+  --accent-fg: #faf6ee;
+  --success: #3e6b47;
+  --warning: #b07a1e;
+  --danger: #a23a2e;
+  --code-bg: #ece5d7;
+  --selection: #cbd9ec;
+
+  /* Syntax (content, harmonised with the palette) */
+  --code-kw: #2a4c7d;
+  --code-str: #3e6b47;
+  --code-num: #b4612b;
+  --code-com: #8c8472;
+  --code-fn: #6b4ea0;
+  --code-attr: #b07a1e;
+  --code-tag: #a23a2e;
+  --code-punc: #5c5446;
+
+  --shadow-pane: 0 2px 8px -4px rgba(33, 29, 23, 0.12);
+  --shadow-pop: 0 12px 32px -10px rgba(33, 29, 23, 0.22);
+
+  --font-scale: 1;
+  color-scheme: light;
+}
+
+/* ---- Folio palette: dark (warm printer's-ink) ---- */
+.dark {
+  --bg: #19160f;
+  --surface: #211d16;
+  --surface-alt: #272219;
+  --surface-hover: #322b20;
+  --border: #393225;
+  --border-strong: #4a4231;
+  --ink: #ece4d4;
+  --muted: #aba08a;
+  --faint: #776e5c;
+  --primary: #8fb2e0;
+  --primary-fg: #19160f;
+  --accent: #d98b4e;
+  --accent-fg: #19160f;
+  --success: #7fb088;
+  --warning: #d6a852;
+  --danger: #d9786b;
+  --code-bg: #23201a;
+  --selection: #2e466a;
+
+  --code-kw: #8fb2e0;
+  --code-str: #7fb088;
+  --code-num: #d98b4e;
+  --code-com: #776e5c;
+  --code-fn: #b9a0e0;
+  --code-attr: #d6a852;
+  --code-tag: #d9786b;
+  --code-punc: #aba08a;
+
+  --shadow-pane: 0 2px 8px -4px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 16px 40px -12px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-code-bg: var(--code-bg);
+  --color-selection: var(--selection);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-spectral), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-card: 6px;
+  --radius-control: 5px;
+  --radius-pill: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    height: 100%;
+  }
+  body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--selection);
+  }
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  /* Quiet, overlay-thin scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--faint);
+    background-clip: content-box;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .pop-shadow {
+    box-shadow: var(--shadow-pop);
+  }
+  .pane-shadow {
+    box-shadow: var(--shadow-pane);
+  }
+  /* Small-caps section label used in chrome (Library, running heads) */
+  .label-caps {
+    font-family: var(--font-serif);
+    font-variant: small-caps;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+}
+
+/* =====================================================================
+   Rendered markdown — set like a printed page.
+   ===================================================================== */
+.folio-prose {
+  font-family: var(--font-serif);
+  font-size: calc(18px * var(--font-scale, 1));
+  line-height: 1.7;
+  color: var(--ink);
+  max-width: 68ch;
+  margin-inline: auto;
+  word-wrap: break-word;
+}
+.folio-prose > :first-child {
+  margin-top: 0;
+}
+.folio-prose > :last-child {
+  margin-bottom: 0;
+}
+
+.folio-prose p {
+  margin: 0 0 0.9em;
+}
+
+/* Headings */
+.folio-prose h1,
+.folio-prose h2,
+.folio-prose h3,
+.folio-prose h4,
+.folio-prose h5,
+.folio-prose h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  scroll-margin-top: 1.5rem;
+  position: relative;
+}
+.folio-prose h1 {
+  font-size: 2.1em;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--border-strong);
+  letter-spacing: -0.005em;
+}
+.folio-prose h2 {
+  font-size: 1.5em;
+  margin: 1.6em 0 0.5em;
+}
+.folio-prose h3 {
+  font-size: 1.2em;
+  margin: 1.4em 0 0.4em;
+}
+.folio-prose h4 {
+  font-size: 1.05em;
+  margin: 1.2em 0 0.4em;
+  color: var(--muted);
+}
+.folio-prose h5,
+.folio-prose h6 {
+  font-size: 0.95em;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 1.1em 0 0.3em;
+}
+
+/* The permalink anchor appended to each heading */
+.folio-prose .heading-anchor {
+  position: absolute;
+  left: -1.1em;
+  width: 1.1em;
+  text-align: center;
+  color: var(--faint);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  border: 0;
+}
+.folio-prose :is(h1, h2, h3, h4, h5, h6):hover .heading-anchor,
+.folio-prose .heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+/* Links — ink-blue, letterpress underline */
+.folio-prose a:not(.heading-anchor) {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  transition: text-decoration-thickness 120ms ease, text-decoration-color 120ms ease;
+}
+.folio-prose a:not(.heading-anchor):hover {
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--primary);
+}
+
+.folio-prose strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+.folio-prose em {
+  font-style: italic;
+}
+.folio-prose del {
+  color: var(--muted);
+}
+
+/* Blockquotes with hanging punctuation */
+.folio-prose blockquote {
+  margin: 1.2em 0;
+  padding-left: 1.1em;
+  border-left: 2px solid var(--primary);
+  color: var(--muted);
+  font-style: italic;
+  hanging-punctuation: first;
+}
+.folio-prose blockquote p {
+  margin-bottom: 0.5em;
+}
+.folio-prose blockquote :last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.folio-prose ul,
+.folio-prose ol {
+  margin: 0 0 0.9em;
+  padding-left: 1.6em;
+}
+.folio-prose li {
+  margin: 0.35em 0;
+}
+.folio-prose li::marker {
+  color: var(--faint);
+}
+.folio-prose ul ul,
+.folio-prose ol ol,
+.folio-prose ul ol,
+.folio-prose ol ul {
+  margin: 0.3em 0;
+}
+
+/* GFM task lists */
+.folio-prose li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.3em;
+  padding-left: 1.3em;
+}
+.folio-prose input[type="checkbox"] {
+  appearance: none;
+  width: 1.05em;
+  height: 1.05em;
+  margin-right: 0.5em;
+  margin-left: -1.35em;
+  vertical-align: -0.15em;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  position: relative;
+}
+.folio-prose input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.folio-prose input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 0.32em;
+  top: 0.12em;
+  width: 0.28em;
+  height: 0.55em;
+  border: solid var(--primary-fg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Inline code */
+.folio-prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--code-bg);
+  color: var(--ink);
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+}
+
+/* Code blocks (the <pre> chrome is provided by the CodeBlock component) */
+.folio-prose pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  line-height: 1.6;
+  overflow-x: auto;
+  background: transparent;
+}
+.folio-prose pre code {
+  font-family: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ink);
+}
+
+/* Tables */
+.folio-prose .table-scroll {
+  overflow-x: auto;
+  margin: 1.2em 0;
+}
+.folio-prose table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92em;
+}
+.folio-prose th,
+.folio-prose td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+.folio-prose thead th {
+  background: var(--surface-alt);
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.folio-prose tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface-alt) 45%, transparent);
+}
+
+/* Horizontal rule — a section break, not a slab */
+.folio-prose hr {
+  border: 0;
+  height: 1px;
+  width: 38%;
+  margin: 2em auto;
+  background: var(--border-strong);
+}
+
+/* Images */
+.folio-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.folio-prose kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  background: var(--surface-alt);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0.1em 0.45em;
+  color: var(--ink);
+}
+
+.folio-prose sup,
+.folio-prose sub {
+  font-size: 0.75em;
+}
+
+/* Footnotes */
+.folio-prose .footnotes {
+  margin-top: 2.5em;
+  padding-top: 1em;
+  border-top: 1px solid var(--border);
+  font-size: 0.85em;
+  color: var(--muted);
+}
+.folio-prose .footnotes h2 {
+  font-size: 0.9em;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  border: 0;
+  margin: 0 0 0.5em;
+}
+
+/* GitHub-style callouts */
+.folio-prose .callout {
+  margin: 1.2em 0;
+  padding: 0.75em 1em;
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-radius: 0 6px 6px 0;
+  font-style: normal;
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.folio-prose .callout p {
+  margin: 0.3em 0;
+}
+.folio-prose .callout::before {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.3em;
+}
+.folio-prose .callout-note {
+  border-left-color: var(--primary);
+}
+.folio-prose .callout-note::before {
+  content: "Note";
+  color: var(--primary);
+}
+.folio-prose .callout-tip {
+  border-left-color: var(--success);
+}
+.folio-prose .callout-tip::before {
+  content: "Tip";
+  color: var(--success);
+}
+.folio-prose .callout-important {
+  border-left-color: var(--accent);
+}
+.folio-prose .callout-important::before {
+  content: "Important";
+  color: var(--accent);
+}
+.folio-prose .callout-warning {
+  border-left-color: var(--warning);
+}
+.folio-prose .callout-warning::before {
+  content: "Warning";
+  color: var(--warning);
+}
+.folio-prose .callout-caution {
+  border-left-color: var(--danger);
+}
+.folio-prose .callout-caution::before {
+  content: "Caution";
+  color: var(--danger);
+}
+
+/* KaTeX */
+.folio-prose .katex-display {
+  margin: 1.2em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25em 0;
+}
+.folio-prose .katex {
+  font-size: 1.05em;
+}
+
+/* Mermaid */
+.folio-prose .mermaid-block {
+  margin: 1.4em 0;
+  display: flex;
+  justify-content: center;
+}
+.folio-prose .mermaid-block svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- highlight.js token colours (content palette) ---- */
+.hljs-comment,
+.hljs-quote {
+  color: var(--code-com);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-doctag {
+  color: var(--code-kw);
+  font-weight: 600;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition {
+  color: var(--code-str);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--code-num);
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-function .hljs-title {
+  color: var(--code-fn);
+  font-weight: 600;
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-class .hljs-title {
+  color: var(--code-attr);
+}
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-type {
+  color: var(--code-kw);
+}
+.hljs-tag,
+.hljs-name,
+.hljs-deletion {
+  color: var(--code-tag);
+}
+.hljs-meta {
+  color: var(--code-com);
+}
+.hljs-punctuation,
+.hljs-operator {
+  color: var(--code-punc);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
+}
+
+/* ---- CodeMirror base (theme handled in component) ---- */
+.cm-editor {
+  height: 100%;
+  font-size: 13.5px;
+  background: var(--code-bg) !important;
+}
+.cm-editor .cm-scroller {
+  font-family: var(--font-mono);
+  line-height: 1.6;
+}
+.cm-editor.cm-focused {
+  outline: none;
+}
+.cm-editor .cm-gutters {
+  background: var(--code-bg) !important;
+  border-right: 1px solid var(--border) !important;
+  color: var(--faint) !important;
+}
+
+/* ---- Motion ---- */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-pop-in {
+  animation: pop-in 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+.animate-fade-in {
+  animation: fade-in 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }
